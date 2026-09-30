@@ -1,0 +1,1274 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pharmacy Medicine Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #111;
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        /* PHARMACY */
+
+        .pharmacy-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .pharmacy-detail {
+            padding: 12px;
+            background: #f7f7f7;
+            border-radius: 7px;
+        }
+
+        /* SCANNER */
+
+        .scanner {
+            border: 2px dashed #aaa;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .scanner h3 {
+            margin-top: 0;
+        }
+
+        .scanner input {
+            margin: 15px 0;
+        }
+
+        .preview {
+            display: none;
+            max-width: 300px;
+            max-height: 220px;
+            margin: 15px auto;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .scan-result {
+            display: none;
+            background: #f0f8ff;
+            border: 1px solid #b7d9f7;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        /* FORM */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 11px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #111;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .scan-button {
+            background: #1976d2;
+        }
+
+        .scan-button:hover {
+            background: #125ca3;
+        }
+
+        /* MEDICINES */
+
+        .medicine {
+            border: 1px solid #ddd;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .medicine h3 {
+            margin: 0 0 8px;
+        }
+
+        .medicine p {
+            margin: 6px 0;
+            color: #555;
+        }
+
+        .available {
+            color: green !important;
+            font-weight: bold;
+        }
+
+        .unavailable {
+            color: red !important;
+            font-weight: bold;
+        }
+
+        .empty {
+            color: #777;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading {
+            color: #777;
+        }
+
+        @media(max-width: 700px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full {
+                grid-column: auto;
+            }
+
+            .pharmacy-details {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+    <h1>
+        💊 Pharmacy Dashboard
+    </h1>
+
+    <span>
+        Medicine Management
+    </span>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- =====================================================
+         PHARMACY DETAILS
+    ====================================================== -->
+
+    <div class="card">
+
+        <h2>
+            Pharmacy Information
+        </h2>
+
+        <div
+            id="pharmacyInfo"
+            class="pharmacy-details"
+        >
+
+            <div class="loading">
+                Loading pharmacy...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ADD MEDICINE
+    ====================================================== -->
+
+    <div class="card">
+
+        <h2>
+            Add Medicine
+        </h2>
+
+
+        <!-- =========================
+             MEDICINE SCANNER
+        ========================== -->
+
+        <div class="scanner">
+
+            <h3>
+                📷 Scan Medicine
+            </h3>
+
+            <p>
+                Take a photo of the medicine package
+                or upload an image.
+            </p>
+
+
+            <input
+                type="file"
+                id="medicineImage"
+                accept="image/*"
+                capture="environment"
+            >
+
+
+            <br>
+
+
+            <img
+                id="imagePreview"
+                class="preview"
+                alt="Medicine preview"
+            >
+
+
+            <br>
+
+
+            <button
+                type="button"
+                class="scan-button"
+                onclick="scanMedicine()"
+            >
+
+                🔍 Scan Medicine
+
+            </button>
+
+
+            <div
+                id="scanResult"
+                class="scan-result"
+            >
+
+                <strong>
+                    OCR Result:
+                </strong>
+
+                <p id="ocrText"></p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             MEDICINE FORM
+        ========================== -->
+
+        <form id="medicineForm">
+
+
+            <div class="form-grid">
+
+
+                <!-- MEDICINE NAME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Medicine Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="e.g. Paracetamol 500mg"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- GENERIC NAME -->
+
+                <div class="form-group">
+
+                    <label>
+                        Generic Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="generic_name"
+                        placeholder="e.g. Paracetamol"
+                    >
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="form-group">
+
+                    <label>
+                        Category
+                    </label>
+
+                    <select id="category">
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        <option value="Pain Relief">
+                            Pain Relief
+                        </option>
+
+                        <option value="Antibiotic">
+                            Antibiotic
+                        </option>
+
+                        <option value="Cold & Flu">
+                            Cold & Flu
+                        </option>
+
+                        <option value="Vitamin">
+                            Vitamin
+                        </option>
+
+                        <option value="Diabetes">
+                            Diabetes
+                        </option>
+
+                        <option value="Allergy">
+                            Allergy
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- PRICE -->
+
+                <div class="form-group">
+
+                    <label>
+                        Price (Rs.)
+                    </label>
+
+                    <input
+                        type="number"
+                        id="price"
+                        placeholder="e.g. 25"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- QUANTITY -->
+
+                <div class="form-group">
+
+                    <label>
+                        Stock Quantity
+                    </label>
+
+                    <input
+                        type="number"
+                        id="quantity"
+                        placeholder="e.g. 100"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- AVAILABILITY -->
+
+                <div class="form-group">
+
+                    <label>
+                        Availability
+                    </label>
+
+                    <select id="available">
+
+                        <option value="true">
+                            Available
+                        </option>
+
+                        <option value="false">
+                            Not Available
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="form-group full">
+
+                    <label>
+                        Description
+                    </label>
+
+                    <textarea
+                        id="description"
+                        placeholder="Medicine information..."
+                    ></textarea>
+
+                </div>
+
+
+            </div>
+
+
+            <button type="submit">
+
+                + Add Medicine
+
+            </button>
+
+
+        </form>
+
+    </div>
+
+
+    <!-- =====================================================
+         MEDICINE LIST
+    ====================================================== -->
+
+    <div class="card">
+
+        <h2>
+            Medicines in Your Pharmacy
+        </h2>
+
+        <div id="medicineList">
+
+            <div class="loading">
+                Loading medicines...
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+/* =====================================================
+   CONFIGURATION
+===================================================== */
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+/*
+ * Temporary pharmacy ID.
+ *
+ * Later this will come automatically
+ * from pharmacy login.
+ */
+
+const pharmacyId = 1;
+
+
+/* =====================================================
+   LOAD PHARMACY DETAILS
+===================================================== */
+
+async function loadPharmacy() {
+
+    try {
+
+        const response = await fetch(
+
+            `${API_URL}/api/shops/${pharmacyId}`
+
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load pharmacy"
+            );
+
+        }
+
+
+        const pharmacy =
+            await response.json();
+
+
+        document.getElementById(
+            "pharmacyInfo"
+        ).innerHTML = `
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Pharmacy Name
+                </strong>
+
+                <br>
+
+                ${pharmacy.name}
+
+            </div>
+
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Owner
+                </strong>
+
+                <br>
+
+                ${pharmacy.owner || "N/A"}
+
+            </div>
+
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Category
+                </strong>
+
+                <br>
+
+                ${pharmacy.category || "Pharmacy"}
+
+            </div>
+
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Phone
+                </strong>
+
+                <br>
+
+                ${pharmacy.phone || "N/A"}
+
+            </div>
+
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Address
+                </strong>
+
+                <br>
+
+                ${pharmacy.address}
+
+            </div>
+
+
+            <div class="pharmacy-detail">
+
+                <strong>
+                    Location
+                </strong>
+
+                <br>
+
+                ${pharmacy.latitude},
+                ${pharmacy.longitude}
+
+            </div>
+
+        `;
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "pharmacyInfo"
+        ).innerHTML = `
+
+            <div class="pharmacy-detail">
+
+                Unable to load pharmacy information.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   IMAGE PREVIEW
+===================================================== */
+
+document.getElementById(
+    "medicineImage"
+).addEventListener(
+
+    "change",
+
+    function() {
+
+        const file =
+            this.files[0];
+
+
+        if (!file) {
+
+            return;
+
+        }
+
+
+        const image =
+            document.getElementById(
+                "imagePreview"
+            );
+
+
+        image.src =
+            URL.createObjectURL(file);
+
+
+        image.style.display =
+            "block";
+
+    }
+
+);
+
+
+/* =====================================================
+   SCAN MEDICINE
+===================================================== */
+
+async function scanMedicine() {
+
+    const input =
+        document.getElementById(
+            "medicineImage"
+        );
+
+
+    if (!input.files.length) {
+
+        alert(
+            "Please select or capture a medicine image first."
+        );
+
+        return;
+
+    }
+
+
+    const file =
+        input.files[0];
+
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "file",
+        file
+    );
+
+
+    const button =
+        document.querySelector(
+            ".scan-button"
+        );
+
+
+    try {
+
+
+        button.disabled =
+            true;
+
+
+        button.textContent =
+            "⏳ Scanning...";
+
+
+        const response =
+            await fetch(
+
+                `${API_URL}/api/medicines/scan`,
+
+                {
+
+                    method: "POST",
+
+                    body: formData
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Scan request failed"
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "OCR:",
+            result
+        );
+
+
+        if (
+            !result.text ||
+            result.text.trim() === ""
+        ) {
+
+            alert(
+                "No medicine text detected. Please take a clearer photo."
+            );
+
+            return;
+
+        }
+
+
+        /* Show OCR result */
+
+        document.getElementById(
+            "scanResult"
+        ).style.display =
+            "block";
+
+
+        document.getElementById(
+            "ocrText"
+        ).textContent =
+            result.text;
+
+
+        /*
+         * Put detected text into
+         * medicine name field.
+         */
+
+        const firstLine =
+            result.text
+                .split("\n")
+                .map(
+                    line => line.trim()
+                )
+                .filter(
+                    line => line.length > 0
+                )[0];
+
+
+        if (firstLine) {
+
+            document.getElementById(
+                "name"
+            ).value =
+                firstLine;
+
+        }
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to scan medicine. Check that the OCR backend is running."
+        );
+
+    }
+
+    finally {
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "🔍 Scan Medicine";
+
+    }
+
+}
+
+
+/* =====================================================
+   ADD MEDICINE
+===================================================== */
+
+document.getElementById(
+    "medicineForm"
+).addEventListener(
+
+    "submit",
+
+    async function(event) {
+
+        event.preventDefault();
+
+
+        const medicine = {
+
+            pharmacy_id:
+                pharmacyId,
+
+            name:
+                document.getElementById(
+                    "name"
+                ).value.trim(),
+
+            generic_name:
+                document.getElementById(
+                    "generic_name"
+                ).value.trim(),
+
+            category:
+                document.getElementById(
+                    "category"
+                ).value,
+
+            price:
+                parseFloat(
+                    document.getElementById(
+                        "price"
+                    ).value
+                ),
+
+            quantity:
+                parseInt(
+                    document.getElementById(
+                        "quantity"
+                    ).value
+                ),
+
+            available:
+                document.getElementById(
+                    "available"
+                ).value === "true",
+
+            description:
+                document.getElementById(
+                    "description"
+                ).value.trim()
+
+        };
+
+
+        try {
+
+
+            const response =
+                await fetch(
+
+                    `${API_URL}/api/medicines`,
+
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                medicine
+                            )
+
+                    }
+
+                );
+
+
+            if (!response.ok) {
+
+                const error =
+                    await response.text();
+
+                console.error(error);
+
+                throw new Error(
+                    "Failed to add medicine"
+                );
+
+            }
+
+
+            alert(
+                "Medicine added successfully!"
+            );
+
+
+            document.getElementById(
+                "medicineForm"
+            ).reset();
+
+
+            document.getElementById(
+                "imagePreview"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "scanResult"
+            ).style.display =
+                "none";
+
+
+            loadMedicines();
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Could not add medicine."
+            );
+
+        }
+
+    }
+
+);
+
+
+/* =====================================================
+   LOAD MEDICINES
+===================================================== */
+
+async function loadMedicines() {
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                `${API_URL}/api/medicines/pharmacy/${pharmacyId}`
+
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load medicines"
+            );
+
+        }
+
+
+        const medicines =
+            await response.json();
+
+
+        const list =
+            document.getElementById(
+                "medicineList"
+            );
+
+
+        list.innerHTML =
+            "";
+
+
+        if (
+            !medicines.length
+        ) {
+
+            list.innerHTML = `
+
+                <div class="empty">
+
+                    No medicines added yet.
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        medicines.forEach(
+
+            medicine => {
+
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "medicine";
+
+
+                div.innerHTML = `
+
+                    <h3>
+
+                        💊 ${medicine.name}
+
+                    </h3>
+
+
+                    <p>
+
+                        <strong>
+                            Generic Name:
+                        </strong>
+
+                        ${medicine.generic_name || "N/A"}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Category:
+                        </strong>
+
+                        ${medicine.category || "N/A"}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Price:
+                        </strong>
+
+                        Rs. ${medicine.price}
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Stock:
+                        </strong>
+
+                        ${medicine.quantity}
+
+                    </p>
+
+
+                    <p class="${
+                        medicine.available
+                            ? "available"
+                            : "unavailable"
+                    }">
+
+                        ${
+                            medicine.available
+                                ? "✓ Available"
+                                : "✕ Not Available"
+                        }
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>
+                            Description:
+                        </strong>
+
+                        ${medicine.description || "N/A"}
+
+                    </p>
+
+                `;
+
+
+                list.appendChild(
+                    div
+                );
+
+            }
+
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "medicineList"
+        ).innerHTML = `
+
+            <div class="empty">
+
+                Unable to load medicines.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadPharmacy();
+
+loadMedicines();
+
+
+</script>
+
+
+</body>
+
+</html>
+```

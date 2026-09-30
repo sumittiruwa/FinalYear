@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Pharmacy Finder</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+
+        /* HEADER */
+
+        header {
+            height: 65px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        header h2 {
+            margin: 0;
+        }
+
+        .count {
+            background: #111;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+        }
+
+
+        /* MAIN */
+
+        .main {
+            display: flex;
+            height: calc(100vh - 65px);
+        }
+
+
+        /* PHARMACY LIST */
+
+        .sidebar {
+
+            width: 380px;
+
+            background: white;
+
+            overflow-y: auto;
+
+            padding: 15px;
+
+            border-right: 1px solid #ddd;
+
+        }
+
+
+        .sidebar-title {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            margin-bottom: 15px;
+
+        }
+
+
+        /* PHARMACY CARD */
+
+        .pharmacy-card {
+
+            background: white;
+
+            border: 1px solid #ddd;
+
+            border-radius: 10px;
+
+            padding: 15px;
+
+            margin-bottom: 12px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+        }
+
+
+        .pharmacy-card:hover {
+
+            border-color: #111;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        .pharmacy-name {
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .category {
+
+            display: inline-block;
+
+            background: #e8f5e9;
+
+            color: #2e7d32;
+
+            padding: 4px 9px;
+
+            border-radius: 15px;
+
+            font-size: 12px;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .detail {
+
+            margin: 6px 0;
+
+            color: #555;
+
+            font-size: 14px;
+
+        }
+
+
+        .distance {
+
+            margin-top: 10px;
+
+            font-weight: bold;
+
+            font-size: 14px;
+
+        }
+
+
+        .directions {
+
+            display: inline-block;
+
+            margin-top: 12px;
+
+            padding: 8px 12px;
+
+            background: #111;
+
+            color: white;
+
+            text-decoration: none;
+
+            border-radius: 6px;
+
+            font-size: 13px;
+
+        }
+
+
+        /* MAP */
+
+        #map {
+
+            flex: 1;
+
+            height: 100%;
+
+        }
+
+
+        /* USER LOCATION */
+
+        .user-marker {
+
+            width: 18px;
+
+            height: 18px;
+
+            background: #1976d2;
+
+            border: 3px solid white;
+
+            border-radius: 50%;
+
+            box-shadow:
+                0 0 0 5px rgba(25,118,210,0.25);
+
+        }
+
+
+        /* MOBILE */
+
+        @media (max-width: 768px) {
+
+            .main {
+
+                flex-direction: column;
+
+            }
+
+            .sidebar {
+
+                width: 100%;
+
+                height: 45%;
+
+            }
+
+            #map {
+
+                height: 55%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h2>
+        💊 Pharmacy Finder
+    </h2>
+
+    <div class="count">
+
+        <span id="pharmacyCount">
+            0
+        </span>
+
+        Pharmacies
+
+    </div>
+
+</header>
+
+
+<div class="main">
+
+
+    <!-- =========================
+         PHARMACY LIST
+    ========================== -->
+
+    <div class="sidebar">
+
+        <div class="sidebar-title">
+
+            Pharmacies Near You
+
+        </div>
+
+        <div id="pharmacyList">
+
+            Getting your location...
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         MAP
+    ========================== -->
+
+    <div id="map"></div>
+
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+
+// ==========================================
+// API
+// ==========================================
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+// ==========================================
+// DEFAULT LOCATION
+// Kathmandu
+// ==========================================
+
+let userLatitude = 27.7172;
+
+let userLongitude = 85.3240;
+
+
+// ==========================================
+// MAP
+// ==========================================
+
+const map = L.map("map").setView(
+
+    [
+        userLatitude,
+        userLongitude
+    ],
+
+    13
+
+);
+
+
+L.tileLayer(
+
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+    {
+
+        attribution:
+            "&copy; OpenStreetMap contributors"
+
+    }
+
+).addTo(map);
+
+
+// ==========================================
+// USER MARKER
+// ==========================================
+
+let userMarker = null;
+
+
+// ==========================================
+// PHARMACY MARKERS
+// ==========================================
+
+let pharmacyMarkers = {};
+
+
+// ==========================================
+// DISTANCE CALCULATION
+// Haversine Formula
+// ==========================================
+
+function calculateDistance(
+
+    lat1,
+    lon1,
+    lat2,
+    lon2
+
+) {
+
+    const R = 6371;
+
+
+    const dLat =
+        (lat2 - lat1) *
+        Math.PI / 180;
+
+
+    const dLon =
+        (lon2 - lon1) *
+        Math.PI / 180;
+
+
+    const a =
+
+        Math.sin(dLat / 2) *
+        Math.sin(dLat / 2)
+
+        +
+
+        Math.cos(
+            lat1 * Math.PI / 180
+        )
+
+        *
+
+        Math.cos(
+            lat2 * Math.PI / 180
+        )
+
+        *
+
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+
+    const c =
+
+        2 *
+
+        Math.atan2(
+
+            Math.sqrt(a),
+
+            Math.sqrt(1 - a)
+
+        );
+
+
+    return R * c;
+
+}
+
+
+// ==========================================
+// GET USER LOCATION
+// ==========================================
+
+function getUserLocation() {
+
+
+    if (!navigator.geolocation) {
+
+        console.log(
+            "Geolocation not supported"
+        );
+
+        loadPharmacies();
+
+        return;
+
+    }
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        function(position) {
+
+
+            userLatitude =
+                position.coords.latitude;
+
+
+            userLongitude =
+                position.coords.longitude;
+
+
+            console.log(
+                "User location:",
+                userLatitude,
+                userLongitude
+            );
+
+
+            // Move map to user
+
+            map.setView(
+
+                [
+                    userLatitude,
+                    userLongitude
+                ],
+
+                14
+
+            );
+
+
+            // User marker
+
+            const userIcon =
+                L.divIcon({
+
+                    className: "",
+
+                    html:
+                        '<div class="user-marker"></div>',
+
+                    iconSize: [
+                        18,
+                        18
+                    ],
+
+                    iconAnchor: [
+                        9,
+                        9
+                    ]
+
+                });
+
+
+            userMarker =
+                L.marker(
+
+                    [
+                        userLatitude,
+                        userLongitude
+                    ],
+
+                    {
+                        icon: userIcon
+                    }
+
+                )
+                .addTo(map)
+                .bindPopup(
+                    "📍 You are here"
+                );
+
+
+            loadPharmacies();
+
+        },
+
+
+        function(error) {
+
+
+            console.log(
+                "Location permission denied"
+            );
+
+
+            // Use Kathmandu default
+
+            loadPharmacies();
+
+        }
+
+    );
+
+}
+
+
+// ==========================================
+// LOAD PHARMACIES
+// ==========================================
+
+async function loadPharmacies() {
+
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                `${API_URL}/api/shops`
+
+            );
+
+
+        const pharmacies =
+            await response.json();
+
+
+        document.getElementById(
+            "pharmacyCount"
+        ).textContent =
+            pharmacies.length;
+
+
+        // ===================================
+        // CALCULATE DISTANCE
+        // ===================================
+
+        pharmacies.forEach(
+
+            pharmacy => {
+
+                pharmacy.distance =
+                    calculateDistance(
+
+                        userLatitude,
+
+                        userLongitude,
+
+                        pharmacy.latitude,
+
+                        pharmacy.longitude
+
+                    );
+
+            }
+
+        );
+
+
+        // ===================================
+        // SORT NEAREST FIRST
+        // ===================================
+
+        pharmacies.sort(
+
+            (a, b) =>
+                a.distance -
+                b.distance
+
+        );
+
+
+        // ===================================
+        // DISPLAY
+        // ===================================
+
+        displayPharmacies(
+            pharmacies
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "pharmacyList"
+        ).innerHTML =
+
+            "<p>Unable to load pharmacies.</p>";
+
+    }
+
+}
+
+
+// ==========================================
+// DISPLAY PHARMACIES
+// ==========================================
+
+function displayPharmacies(
+    pharmacies
+) {
+
+
+    const list =
+        document.getElementById(
+            "pharmacyList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    pharmacies.forEach(
+
+        (pharmacy, index) => {
+
+
+            // =================================
+            // CREATE MARKER
+            // =================================
+
+            const marker =
+                L.marker(
+
+                    [
+
+                        pharmacy.latitude,
+
+                        pharmacy.longitude
+
+                    ]
+
+                ).addTo(map);
+
+
+            marker.bindPopup(`
+
+                <strong>
+                    ${pharmacy.name}
+                </strong>
+
+                <br>
+
+                ${pharmacy.address}
+
+            `);
+
+
+            pharmacyMarkers[
+                pharmacy.id
+            ] = marker;
+
+
+            // =================================
+            // CARD
+            // =================================
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "pharmacy-card";
+
+
+            card.innerHTML = `
+
+                <div class="pharmacy-name">
+
+                    ${pharmacy.name}
+
+                </div>
+
+
+                <span class="category">
+
+                    ${pharmacy.category}
+
+                </span>
+
+
+                <div class="detail">
+
+                    👤
+
+                    <strong>
+                        Owner:
+                    </strong>
+
+                    ${pharmacy.owner || "N/A"}
+
+                </div>
+
+
+                <div class="detail">
+
+                    📍
+
+                    <strong>
+                        Address:
+                    </strong>
+
+                    ${pharmacy.address}
+
+                </div>
+
+
+                <div class="detail">
+
+                    📞
+
+                    <strong>
+                        Phone:
+                    </strong>
+
+                    ${pharmacy.phone || "N/A"}
+
+                </div>
+
+
+                <div class="distance">
+
+                    📏
+
+                    ${formatDistance(
+                        pharmacy.distance
+                    )}
+
+                    away
+
+                </div>
+
+
+                <a
+
+                    class="directions"
+
+                    href="https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}"
+
+                    target="_blank"
+
+                    onclick="event.stopPropagation()"
+
+                >
+
+                    📍 Directions
+
+                </a>
+
+            `;
+
+
+            // =================================
+            // CLICK CARD
+            // =================================
+
+            card.addEventListener(
+
+                "click",
+
+                function() {
+
+
+                    map.setView(
+
+                        [
+
+                            pharmacy.latitude,
+
+                            pharmacy.longitude
+
+                        ],
+
+                        17
+
+                    );
+
+
+                    pharmacyMarkers[
+                        pharmacy.id
+                    ].openPopup();
+
+                }
+
+            );
+
+
+            list.appendChild(card);
+
+        }
+
+    );
+
+}
+
+
+// ==========================================
+// FORMAT DISTANCE
+// ==========================================
+
+function formatDistance(
+    distance
+) {
+
+
+    if (distance < 1) {
+
+        return Math.round(
+            distance * 1000
+        ) + " m";
+
+    }
+
+
+    return distance.toFixed(2) + " km";
+
+}
+
+
+// ==========================================
+// START
+// ==========================================
+
+getUserLocation();
+
+
+</script>
+
+
+</body>
+
+</html>

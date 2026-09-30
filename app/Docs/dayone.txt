@@ -1,0 +1,226 @@
+# Daily Project Progress Report
+
+**Date:** September 30, 2026
+**Project:** E-Pharma / Smart Pharmacy Location and Medicine System
+
+## 1. Today's Objectives
+
+The main objective for today was to continue developing the backend and pharmacy management system for the E-Pharma project.
+
+The focus was on:
+
+* Developing the FastAPI backend.
+* Managing pharmacy/shop locations.
+* Displaying pharmacies on a map.
+* Creating an admin interface for pharmacy information.
+* Creating a pharmacy medicine management panel.
+* Preparing medicine scanning using OpenCV and OCR.
+
+## 2. Work Completed
+
+### 2.1 FastAPI Backend
+
+A Python FastAPI backend was configured and successfully run using Uvicorn.
+
+The development server was tested using:
+
+```text
+python -m uvicorn app.main:app --reload
+```
+
+The API documentation was accessed through:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 2.2 Pharmacy Location Management
+
+A pharmacy/shop model was created to store important pharmacy information such as:
+
+* Pharmacy name
+* Owner
+* Category
+* Phone number
+* Address
+* Latitude
+* Longitude
+
+This allows the system to store the exact geographical location of each pharmacy.
+
+### 2.3 Pharmacy Map Integration
+
+The system was designed to display pharmacy locations on a map.
+
+Users can view pharmacies and select a pharmacy to see its information and location.
+
+The planned user interface includes:
+
+* Pharmacy name
+* Pharmacy details
+* Location
+* Distance from the user
+* Map marker
+
+### 2.4 Admin Pharmacy Panel
+
+An admin interface was created to manage pharmacy information.
+
+The administrator can enter pharmacy details and save the pharmacy location into the database.
+
+Example pharmacy data:
+
+```text
+Pharmacy Name: ABC Pharmacy
+Owner: Sumit
+Category: Pharmacy
+Phone: 9800000000
+Address: New Baneshwor, Kathmandu
+Latitude: 27.6915
+Longitude: 85.3420
+```
+
+### 2.5 Pharmacy Medicine Management
+
+A separate pharmacy dashboard was created at:
+
+```text
+/pharmacy
+```
+
+The pharmacy dashboard allows a pharmacy to manage its medicines.
+
+Medicine information includes:
+
+* Medicine name
+* Generic name
+* Category
+* Price
+* Stock quantity
+* Availability
+* Description
+
+The medicines are associated with a specific pharmacy using the pharmacy ID.
+
+### 2.6 Medicine Scanner
+
+An image-based medicine scanning feature was started.
+
+The planned process is:
+
+```text
+Medicine Image
+      ↓
+OpenCV
+      ↓
+Image Processing
+      ↓
+OCR
+      ↓
+Medicine Name
+      ↓
+Medicine Form
+```
+
+OpenCV is being used for image preprocessing, while OCR is used to extract text from the medicine package.
+
+### 2.7 Required Python Packages
+
+The required packages for the medicine scanner were installed/prepared:
+
+```text
+opencv-python
+pytesseract
+pillow
+python-multipart
+```
+
+`python-multipart` is required by FastAPI to receive uploaded medicine images.
+
+## 3. Current System Flow
+
+The current project architecture is:
+
+```text
+                    E-PHARMA SYSTEM
+                          │
+          ┌───────────────┴───────────────┐
+          │                               │
+       ADMIN                          PHARMACY
+          │                               │
+    Add Pharmacy                    Manage Medicines
+          │                               │
+    Shop Location                   Scan Medicine
+          │                               │
+          └───────────────┬───────────────┘
+                          │
+                        USER
+                          │
+                    View Pharmacies
+                          │
+                    View Map Location
+                          │
+                 View Pharmacy Details
+                          │
+                  View Available Medicines
+```
+
+## 4. Problems Encountered
+
+During development, several backend configuration issues were encountered.
+
+### SQLAlchemy
+
+Initially, SQLAlchemy was missing from the virtual environment.
+
+The package was installed and the database model was successfully imported.
+
+### Model Import
+
+There was initially an issue importing the `Shop` model. The model was corrected and successfully tested.
+
+### Schema Import
+
+There was also an issue importing `ShopCreate` and `ShopResponse`. The schemas were corrected and successfully tested.
+
+### Image Upload
+
+When the medicine scanner endpoint was added, FastAPI required the `python-multipart` package for image uploads.
+
+The package was identified as a required dependency and installed.
+
+## 5. Testing
+
+The following components were tested:
+
+* FastAPI server
+* Uvicorn development server
+* API documentation
+* Shop model
+* Shop schemas
+* Pharmacy dashboard
+* Medicine management interface
+* Image upload preparation
+* OpenCV/OCR integration preparation
+
+## 6. Next Steps
+
+The next development tasks are:
+
+1. Complete the OpenCV medicine scanner.
+2. Improve OCR accuracy for medicine packages.
+3. Automatically identify the medicine name from OCR text.
+4. Match scanned medicine names with the medicine database.
+5. Display medicine information to users.
+6. Add pharmacy authentication/login.
+7. Connect each pharmacy account with its own inventory.
+8. Add medicine search for users.
+9. Add nearby pharmacy filtering.
+10. Calculate distance between the user and pharmacies.
+11. Complete the map-based user interface.
+
+## 7. Conclusion
+
+Today's development focused on establishing the foundation of the E-Pharma system. The FastAPI backend, pharmacy location management, map-based pharmacy concept, pharmacy dashboard, medicine management, and initial OpenCV/OCR integration were developed.
+
+The next major focus is to complete the medicine scanning and connect the scanned medicine with the pharmacy inventory database.

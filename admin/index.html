@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Shop Admin</title>
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .location-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .location-info p {
+            margin: 5px 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #111;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Shop Location Admin Panel</h1>
+
+
+    <!-- SHOP NAME -->
+
+    <div class="form-group">
+
+        <label>Shop Name</label>
+
+        <input
+            type="text"
+            id="name"
+            placeholder="Enter shop name"
+        >
+
+    </div>
+
+
+    <!-- OWNER -->
+
+    <div class="form-group">
+
+        <label>Owner Name</label>
+
+        <input
+            type="text"
+            id="owner"
+            placeholder="Enter owner name"
+        >
+
+    </div>
+
+
+    <!-- CATEGORY -->
+
+    <div class="form-group">
+
+        <label>Category</label>
+
+        <input
+            type="text"
+            id="category"
+            placeholder="e.g. Pharmacy, Grocery, Restaurant"
+        >
+
+    </div>
+
+
+    <!-- PHONE -->
+
+    <div class="form-group">
+
+        <label>Phone</label>
+
+        <input
+            type="text"
+            id="phone"
+            placeholder="Enter phone number"
+        >
+
+    </div>
+
+
+    <!-- ADDRESS -->
+
+    <div class="form-group">
+
+        <label>Address</label>
+
+        <input
+            type="text"
+            id="address"
+            placeholder="Enter shop address"
+        >
+
+    </div>
+
+
+    <h3>Select Shop Location</h3>
+
+    <p>
+        Click directly on the map to select the shop's location.
+    </p>
+
+
+    <!-- MAP -->
+
+    <div id="map"></div>
+
+
+    <!-- LOCATION -->
+
+    <div class="location-info">
+
+        <p>
+            <strong>Latitude:</strong>
+
+            <span id="latitude">
+                Not selected
+            </span>
+        </p>
+
+
+        <p>
+            <strong>Longitude:</strong>
+
+            <span id="longitude">
+                Not selected
+            </span>
+        </p>
+
+    </div>
+
+
+    <!-- SAVE -->
+
+    <button onclick="saveShop()">
+
+        Save Shop
+
+    </button>
+
+</div>
+
+
+<!-- Leaflet JS -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+    const API_URL = "http://127.0.0.1:8000";
+
+
+    // =====================================
+    // CREATE MAP
+    // =====================================
+
+    const map = L.map("map").setView(
+
+        [27.7172, 85.3240],
+
+        13
+
+    );
+
+
+    // =====================================
+    // LOAD OPENSTREETMAP
+    // =====================================
+
+    L.tileLayer(
+
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+        {
+
+            attribution:
+                "&copy; OpenStreetMap contributors"
+
+        }
+
+    ).addTo(map);
+
+
+    // =====================================
+    // VARIABLES
+    // =====================================
+
+    let marker = null;
+
+    let selectedLatitude = null;
+
+    let selectedLongitude = null;
+
+
+    // =====================================
+    // CLICK MAP
+    // =====================================
+
+    map.on("click", function(event) {
+
+        selectedLatitude =
+            event.latlng.lat;
+
+        selectedLongitude =
+            event.latlng.lng;
+
+
+        // Show coordinates
+
+        document.getElementById(
+            "latitude"
+        ).textContent =
+            selectedLatitude.toFixed(6);
+
+
+        document.getElementById(
+            "longitude"
+        ).textContent =
+            selectedLongitude.toFixed(6);
+
+
+        // Remove old marker
+
+        if (marker) {
+
+            map.removeLayer(marker);
+
+        }
+
+
+        // Create new marker
+
+        marker = L.marker([
+
+            selectedLatitude,
+
+            selectedLongitude
+
+        ]).addTo(map);
+
+
+        marker
+            .bindPopup(
+                "Selected Shop Location"
+            )
+            .openPopup();
+
+    });
+
+
+    // =====================================
+    // SAVE SHOP
+    // =====================================
+
+    async function saveShop() {
+
+
+        // Check location
+
+        if (
+
+            selectedLatitude === null ||
+
+            selectedLongitude === null
+
+        ) {
+
+            alert(
+                "Please select the shop location on the map."
+            );
+
+            return;
+
+        }
+
+
+        // Get form values
+
+        const shop = {
+
+            name:
+                document.getElementById(
+                    "name"
+                ).value,
+
+            owner:
+                document.getElementById(
+                    "owner"
+                ).value,
+
+            category:
+                document.getElementById(
+                    "category"
+                ).value,
+
+            phone:
+                document.getElementById(
+                    "phone"
+                ).value,
+
+            address:
+                document.getElementById(
+                    "address"
+                ).value,
+
+            latitude:
+                selectedLatitude,
+
+            longitude:
+                selectedLongitude
+
+        };
+
+
+        // Validation
+
+        if (
+
+            !shop.name ||
+
+            !shop.category ||
+
+            !shop.address
+
+        ) {
+
+            alert(
+                "Please fill in shop name, category and address."
+            );
+
+            return;
+
+        }
+
+
+        // Send data to FastAPI
+
+        try {
+
+            const response = await fetch(
+
+                `${API_URL}/api/shops`,
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(shop)
+
+                }
+
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to save shop"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            console.log(data);
+
+
+            alert(
+                "Shop saved successfully!"
+            );
+
+
+            // Reset form
+
+            document.getElementById(
+                "name"
+            ).value = "";
+
+
+            document.getElementById(
+                "owner"
+            ).value = "";
+
+
+            document.getElementById(
+                "category"
+            ).value = "";
+
+
+            document.getElementById(
+                "phone"
+            ).value = "";
+
+
+            document.getElementById(
+                "address"
+            ).value = "";
+
+
+            document.getElementById(
+                "latitude"
+            ).textContent =
+                "Not selected";
+
+
+            document.getElementById(
+                "longitude"
+            ).textContent =
+                "Not selected";
+
+
+            if (marker) {
+
+                map.removeLayer(marker);
+
+                marker = null;
+
+            }
+
+
+            selectedLatitude = null;
+
+            selectedLongitude = null;
+
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Could not connect to the backend."
+            );
+
+        }
+
+    }
+
+</script>
+
+</body>
+
+</html>
