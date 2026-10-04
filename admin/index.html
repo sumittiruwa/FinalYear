@@ -1,689 +1,695 @@
-```html
-<!DOCTYPE html>
-<html lang="en">
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Pharmacy Admin Panel</title>
+        <title>Pharmacy Admin Panel</title>
 
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        #map {
-            width: 100%;
-            height: 500px;
-            margin-top: 20px;
-            border-radius: 10px;
-        }
-
-        .location-info {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f1f1f1;
-            border-radius: 8px;
-        }
-
-        .location-info p {
-            margin: 5px 0;
-        }
-
-        button {
-            margin-top: 20px;
-            padding: 12px 25px;
-            background: #111;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background: #333;
-        }
-
-        /* PHARMACY LIST */
-
-        .pharmacy-section {
-            margin-top: 40px;
-        }
-
-        .pharmacy-section h2 {
-            margin-bottom: 20px;
-        }
-
-        .pharmacy-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .pharmacy-card {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            background: #fafafa;
-        }
-
-        .pharmacy-card h3 {
-            margin-top: 0;
-            margin-bottom: 12px;
-        }
-
-        .pharmacy-card p {
-            margin: 7px 0;
-            color: #444;
-        }
-
-        .empty {
-            padding: 20px;
-            background: #f1f1f1;
-            border-radius: 8px;
-            color: #666;
-        }
-
-        .refresh-btn {
-            margin-top: 0;
-            margin-bottom: 20px;
-            background: #444;
-        }
-    </style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-    <h1>Pharmacy Location Admin Panel</h1>
-
-    <!-- PHARMACY NAME -->
-
-    <div class="form-group">
-
-        <label>Pharmacy Name</label>
-
-        <input
-            type="text"
-            id="name"
-            placeholder="Enter pharmacy name"
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         >
 
-    </div>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: #f5f5f5;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 30px auto;
+                background: white;
+                padding: 25px;
+                border-radius: 12px;
+            }
+
+            h1 {
+                margin-top: 0;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+
+            input {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+            }
+
+            #map {
+                width: 100%;
+                height: 500px;
+                margin-top: 20px;
+                border-radius: 10px;
+            }
+
+            .location-info {
+                margin-top: 15px;
+                padding: 15px;
+                background: #f1f1f1;
+                border-radius: 8px;
+            }
+
+            .location-info p {
+                margin: 5px 0;
+            }
+
+            button {
+                margin-top: 20px;
+                padding: 12px 25px;
+                background: #111;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+
+            button:hover {
+                background: #333;
+            }
+
+            /* PHARMACY LIST */
+
+            .pharmacy-section {
+                margin-top: 40px;
+            }
+
+            .pharmacy-section h2 {
+                margin-bottom: 20px;
+            }
+
+            .pharmacy-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .pharmacy-card {
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 20px;
+                background: #fafafa;
+            }
+
+            .pharmacy-card h3 {
+                margin-top: 0;
+                margin-bottom: 12px;
+            }
+
+            .pharmacy-card p {
+                margin: 7px 0;
+                color: #444;
+            }
+
+            .empty {
+                padding: 20px;
+                background: #f1f1f1;
+                border-radius: 8px;
+                color: #666;
+            }
+
+            .refresh-btn {
+                margin-top: 0;
+                margin-bottom: 20px;
+                background: #444;
+            }
+        </style>
+
+    </head>
+
+    <body>
+
+    <div class="container">
+
+        <h1>Pharmacy Location Admin Panel</h1>
+
+        <!-- PHARMACY NAME -->
+
+        <div class="form-group">
+
+            <label>Pharmacy Name</label>
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Enter pharmacy name"
+            >
+
+        </div>
 
 
-    <!-- OWNER -->
+        <!-- OWNER -->
 
-    <div class="form-group">
+        <div class="form-group">
 
-        <label>Owner Name</label>
+            <label>Owner Name</label>
 
-        <input
-            type="text"
-            id="owner"
-            placeholder="Enter owner name"
-        >
+            <input
+                type="text"
+                id="owner"
+                placeholder="Enter owner name"
+            >
 
-    </div>
-
-
-    <!-- CATEGORY -->
-
-    <div class="form-group">
-
-        <label>Category</label>
-
-        <input
-            type="text"
-            id="category"
-            value="Pharmacy"
-            placeholder="Pharmacy"
-        >
-
-    </div>
+        </div>
 
 
-    <!-- PHONE -->
+        <!-- CATEGORY -->
 
-    <div class="form-group">
+        <div class="form-group">
 
-        <label>Phone</label>
+            <label>Category</label>
 
-        <input
-            type="text"
-            id="phone"
-            placeholder="Enter phone number"
-        >
+            <input
+                type="text"
+                id="category"
+                value="Pharmacy"
+                placeholder="Pharmacy"
+            >
 
-    </div>
-
-
-    <!-- ADDRESS -->
-
-    <div class="form-group">
-
-        <label>Address</label>
-
-        <input
-            type="text"
-            id="address"
-            placeholder="Enter pharmacy address"
-        >
-
-    </div>
+        </div>
 
 
-    <h3>Select Pharmacy Location</h3>
+        <!-- PHONE -->
 
-    <p>
-        Click directly on the map to select the pharmacy location.
-    </p>
+        <div class="form-group">
+
+            <label>Phone</label>
+
+            <input
+                type="text"
+                id="phone"
+                placeholder="Enter phone number"
+            >
+
+        </div>
 
 
-    <!-- MAP -->
+        <!-- ADDRESS -->
 
-    <div id="map"></div>
+        <div class="form-group">
+
+            <label>Address</label>
+
+            <input
+                type="text"
+                id="address"
+                placeholder="Enter pharmacy address"
+            >
+
+        </div>
 
 
-    <!-- LOCATION -->
-
-    <div class="location-info">
+        <h3>Select Pharmacy Location</h3>
 
         <p>
-            <strong>Latitude:</strong>
-
-            <span id="latitude">
-                Not selected
-            </span>
+            Click directly on the map to select the pharmacy location.
         </p>
 
-        <p>
-            <strong>Longitude:</strong>
 
-            <span id="longitude">
-                Not selected
-            </span>
-        </p>
+        <!-- MAP -->
 
-    </div>
+        <div id="map"></div>
 
 
-    <!-- SAVE -->
+        <!-- LOCATION -->
 
-    <button onclick="saveShop()">
-        Save Pharmacy
-    </button>
+        <div class="location-info">
+
+            <p>
+                <strong>Latitude:</strong>
+
+                <span id="latitude">
+                    Not selected
+                </span>
+            </p>
+
+            <p>
+                <strong>Longitude:</strong>
+
+                <span id="longitude">
+                    Not selected
+                </span>
+            </p>
+
+        </div>
 
 
-    <!-- ADDED PHARMACIES -->
+        <!-- SAVE -->
 
-    <div class="pharmacy-section">
-
-        <h2>Added Pharmacies</h2>
-
-        <button
-            class="refresh-btn"
-            onclick="loadPharmacies()"
-        >
-            Refresh Pharmacies
+        <button onclick="saveShop()">
+            Save Pharmacy
         </button>
 
-        <div
-            id="pharmacyList"
-            class="pharmacy-list"
-        >
-            <div class="empty">
-                Loading pharmacies...
+
+        <!-- ADDED PHARMACIES -->
+
+        <div class="pharmacy-section">
+
+            <h2>Added Pharmacies</h2>
+
+            <button
+                class="refresh-btn"
+                onclick="loadPharmacies()"
+            >
+                Refresh Pharmacies
+            </button>
+
+            <div
+                id="pharmacyList"
+                class="pharmacy-list"
+            >
+                <div class="empty">
+                    Loading pharmacies...
+                </div>
             </div>
+
         </div>
 
     </div>
 
-</div>
 
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
 
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
 
+    <script>
 
-<script>
+    const API_URL = "http://127.0.0.1:8000";
 
-const API_URL = "http://127.0.0.1:8000";
 
+    // =====================================
+    // CREATE MAP
+    // =====================================
 
-// =====================================
-// CREATE MAP
-// =====================================
+    const map = L.map("map").setView(
+        [27.7172, 85.3240],
+        13
+    );
 
-const map = L.map("map").setView(
-    [27.7172, 85.3240],
-    13
-);
 
+    // =====================================
+    // OPENSTREETMAP
+    // =====================================
 
-// =====================================
-// OPENSTREETMAP
-// =====================================
-
-L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-        attribution:
-            "&copy; OpenStreetMap contributors"
-    }
-).addTo(map);
-
-
-// =====================================
-// VARIABLES
-// =====================================
-
-let marker = null;
-
-let selectedLatitude = null;
-
-let selectedLongitude = null;
-
-
-// =====================================
-// MAP CLICK
-// =====================================
-
-map.on("click", function(event) {
-
-    selectedLatitude = event.latlng.lat;
-
-    selectedLongitude = event.latlng.lng;
-
-
-    document.getElementById(
-        "latitude"
-    ).textContent =
-        selectedLatitude.toFixed(6);
-
-
-    document.getElementById(
-        "longitude"
-    ).textContent =
-        selectedLongitude.toFixed(6);
-
-
-    if (marker) {
-
-        map.removeLayer(marker);
-
-    }
-
-
-    marker = L.marker([
-        selectedLatitude,
-        selectedLongitude
-    ]).addTo(map);
-
-
-    marker
-        .bindPopup(
-            "Selected Pharmacy Location"
-        )
-        .openPopup();
-
-});
-
-
-// =====================================
-// SAVE PHARMACY
-// =====================================
-
-async function saveShop() {
-
-    if (
-        selectedLatitude === null ||
-        selectedLongitude === null
-    ) {
-
-        alert(
-            "Please select the pharmacy location on the map."
-        );
-
-        return;
-    }
-
-
-    const shop = {
-
-        name:
-            document.getElementById("name").value,
-
-        owner:
-            document.getElementById("owner").value,
-
-        category:
-            document.getElementById("category").value,
-
-        phone:
-            document.getElementById("phone").value,
-
-        address:
-            document.getElementById("address").value,
-
-        latitude:
-            selectedLatitude,
-
-        longitude:
-            selectedLongitude
-
-    };
-
-
-    if (
-        !shop.name ||
-        !shop.category ||
-        !shop.address
-    ) {
-
-        alert(
-            "Please fill in pharmacy name, category and address."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const response = await fetch(
-            `${API_URL}/api/shops`,
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body:
-                    JSON.stringify(shop)
-            }
-        );
-
-
-        if (!response.ok) {
-
-            const error =
-                await response.text();
-
-            console.error(error);
-
-            throw new Error(
-                "Failed to save pharmacy"
-            );
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "&copy; OpenStreetMap contributors"
         }
+    ).addTo(map);
 
 
-        await response.json();
+    // =====================================
+    // VARIABLES
+    // =====================================
+
+    let marker = null;
+
+    let selectedLatitude = null;
+
+    let selectedLongitude = null;
 
 
-        alert(
-            "Pharmacy saved successfully!"
-        );
+    // =====================================
+    // MAP CLICK
+    // =====================================
 
+    map.on("click", function(event) {
 
-        // Reset form
+        selectedLatitude = event.latlng.lat;
 
-        document.getElementById("name").value = "";
-
-        document.getElementById("owner").value = "";
-
-        document.getElementById("phone").value = "";
-
-        document.getElementById("address").value = "";
+        selectedLongitude = event.latlng.lng;
 
 
         document.getElementById(
             "latitude"
         ).textContent =
-            "Not selected";
+            selectedLatitude.toFixed(6);
 
 
         document.getElementById(
             "longitude"
         ).textContent =
-            "Not selected";
+            selectedLongitude.toFixed(6);
 
 
         if (marker) {
 
             map.removeLayer(marker);
 
-            marker = null;
-
         }
 
 
-        selectedLatitude = null;
-
-        selectedLongitude = null;
-
-
-        // Reload pharmacy list
-
-        loadPharmacies();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Could not connect to the backend."
-        );
-
-    }
-
-}
+        marker = L.marker([
+            selectedLatitude,
+            selectedLongitude
+        ]).addTo(map);
 
 
-// =====================================
-// LOAD ALL PHARMACIES
-// =====================================
+        marker
+            .bindPopup(
+                "Selected Pharmacy Location"
+            )
+            .openPopup();
 
-async function loadPharmacies() {
-
-    const list =
-        document.getElementById(
-            "pharmacyList"
-        );
+    });
 
 
-    try {
+    // =====================================
+    // SAVE PHARMACY
+    // =====================================
 
-        const response =
-            await fetch(
-                `${API_URL}/api/shops`
+    async function saveShop() {
+
+        if (
+            selectedLatitude === null ||
+            selectedLongitude === null
+        ) {
+
+            alert(
+                "Please select the pharmacy location on the map."
             );
 
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Failed to load pharmacies"
-            );
-
+            return;
         }
 
 
-        const pharmacies =
-            await response.json();
+        const shop = {
 
+            name:
+                document.getElementById("name").value,
 
-        list.innerHTML = "";
+            owner:
+                document.getElementById("owner").value,
+
+            category:
+                document.getElementById("category").value,
+
+            phone:
+                document.getElementById("phone").value,
+
+            address:
+                document.getElementById("address").value,
+
+            latitude:
+                selectedLatitude,
+
+            longitude:
+                selectedLongitude
+
+        };
 
 
         if (
-            !pharmacies ||
-            pharmacies.length === 0
+            !shop.name ||
+            !shop.category ||
+            !shop.address
         ) {
 
-            list.innerHTML = `
-                <div class="empty">
-                    No pharmacies added yet.
-                </div>
-            `;
+            alert(
+                "Please fill in pharmacy name, category and address."
+            );
 
             return;
-
         }
 
 
-        pharmacies.forEach(
-            function(pharmacy) {
+        try {
 
-                const card =
-                    document.createElement(
-                        "div"
-                    );
+            const response = await fetch(
+                `${API_URL}/api/shops`,
+                {
+                    method: "POST",
 
-                card.className =
-                    "pharmacy-card";
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-
-                card.innerHTML = `
-
-                    <h3>
-                        🏥 ${pharmacy.name}
-                    </h3>
-
-                    <p>
-                        <strong>Owner:</strong>
-                        ${pharmacy.owner || "N/A"}
-                    </p>
-
-                    <p>
-                        <strong>Category:</strong>
-                        ${pharmacy.category || "Pharmacy"}
-                    </p>
-
-                    <p>
-                        <strong>Phone:</strong>
-                        ${pharmacy.phone || "N/A"}
-                    </p>
-
-                    <p>
-                        <strong>Address:</strong>
-                        ${pharmacy.address || "N/A"}
-                    </p>
-
-                    <p>
-                        <strong>Latitude:</strong>
-                        ${pharmacy.latitude}
-                    </p>
-
-                    <p>
-                        <strong>Longitude:</strong>
-                        ${pharmacy.longitude}
-                    </p>
-
-                `;
+                    body:
+                        JSON.stringify(shop)
+                }
+            );
 
 
-                list.appendChild(card);
+            if (!response.ok) {
+
+                const error =
+                    await response.text();
+
+                console.error(error);
+
+                throw new Error(
+                    "Failed to save pharmacy"
+                );
+            }
+
+
+            await response.json();
+
+
+            alert(
+                "Pharmacy saved successfully!"
+            );
+
+
+            // Reset form
+
+            document.getElementById("name").value = "";
+
+            document.getElementById("owner").value = "";
+
+            document.getElementById("phone").value = "";
+
+            document.getElementById("address").value = "";
+
+
+            document.getElementById(
+                "latitude"
+            ).textContent =
+                "Not selected";
+
+
+            document.getElementById(
+                "longitude"
+            ).textContent =
+                "Not selected";
+
+
+            if (marker) {
+
+                map.removeLayer(marker);
+
+                marker = null;
 
             }
-        );
+
+
+            selectedLatitude = null;
+
+            selectedLongitude = null;
+
+
+            // Reload pharmacy list
+
+            loadPharmacies();
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Could not connect to the backend."
+            );
+
+        }
 
     }
 
-    catch (error) {
 
-        console.error(error);
+    // =====================================
+    // LOAD ALL PHARMACIES
+    // =====================================
 
-        list.innerHTML = `
-            <div class="empty">
-                Could not load pharmacies.
-                Check whether the FastAPI server is running.
-            </div>
-        `;
+    async function loadPharmacies() {
+
+        const list =
+            document.getElementById(
+                "pharmacyList"
+            );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/api/shops`
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load pharmacies"
+                );
+
+            }
+
+
+            const pharmacies =
+                await response.json();
+
+
+            list.innerHTML = "";
+
+
+            if (
+                !pharmacies ||
+                pharmacies.length === 0
+            ) {
+
+                list.innerHTML = `
+                    <div class="empty">
+                        No pharmacies added yet.
+                    </div>
+                `;
+
+                return;
+
+            }
+
+
+            pharmacies.forEach(
+                function(pharmacy) {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+                    card.className =
+                        "pharmacy-card";
+
+
+                    card.innerHTML = `
+
+                        <h3>
+                            🏥 ${pharmacy.name}
+                        </h3>
+
+                        <p>
+                            <strong>Owner:</strong>
+                            ${pharmacy.owner || "N/A"}
+                        </p>
+
+                        <p>
+                            <strong>Category:</strong>
+                            ${pharmacy.category || "Pharmacy"}
+                        </p>
+
+                        <p>
+                            <strong>Phone:</strong>
+                            ${pharmacy.phone || "N/A"}
+                        </p>
+
+                        <p>
+                            <strong>Address:</strong>
+                            ${pharmacy.address || "N/A"}
+                        </p>
+
+                        <p>
+                            <strong>Latitude:</strong>
+                            ${pharmacy.latitude}
+                        </p>
+
+                        <p>
+                            <strong>Longitude:</strong>
+                            ${pharmacy.longitude}
+                        </p>
+                <button onclick="managePharmacy(${pharmacy.id})">
+    Manage Pharmacy
+</button>
+
+                    `;
+
+
+                    list.appendChild(card);
+
+                }
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            list.innerHTML = `
+                <div class="empty">
+                    Could not load pharmacies.
+                    Check whether the FastAPI server is running.
+                </div>
+            `;
+
+        }
 
     }
 
+
+    // =====================================
+    // LOAD PHARMACIES WHEN PAGE OPENS
+    // =====================================
+
+    loadPharmacies();
+  function managePharmacy(id) {
+    window.location.href = `/admin/manage.html?id=${id}`;
 }
 
+    </script>
 
-// =====================================
-// LOAD PHARMACIES WHEN PAGE OPENS
-// =====================================
+    </body>
 
-loadPharmacies();
+    </html>
+    ```
 
-</script>
+    ### Now run it
 
-</body>
+    Keep your FastAPI terminal running:
 
-</html>
-```
+    ```powershell
+    python -m uvicorn app.main:app --reload
+    ```
 
-### Now run it
+    Open:
 
-Keep your FastAPI terminal running:
+    ```text
+    http://127.0.0.1:8000/pharmacy
+    ```
 
-```powershell
-python -m uvicorn app.main:app --reload
-```
+    Now the flow is:
 
-Open:
+    **Enter pharmacy → click map → Save Pharmacy → pharmacy is saved → automatically appears under "Added Pharmacies".**
 
-```text
-http://127.0.0.1:8000/pharmacy
-```
-
-Now the flow is:
-
-**Enter pharmacy → click map → Save Pharmacy → pharmacy is saved → automatically appears under "Added Pharmacies".**
-
-If your `GET /api/shops` endpoint is already working, this will work immediately. If you get **`GET /api/shops 404`**, send me that error because we need to add the GET route in `main.py`.
+    If your `GET /api/shops` endpoint is already working, this will work immediately. If you get **`GET /api/shops 404`**, send me that error because we need to add the GET route in `main.py`.

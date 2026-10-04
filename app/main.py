@@ -1,31 +1,59 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
-from .models import Shop
-from .schemas import ShopCreate, ShopResponse
+from .models import Shop, Medicine
+from .schemas import (
+    ShopCreate,
+    ShopResponse,
+    MedicineCreate,
+    MedicineResponse
+)
+
 import os
 import tempfile
-
-from fastapi import UploadFile, File
 
 from .services.medicine_scanner import scan_medicine
 
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# =====================================
+# FASTAPI APP
+# =====================================
 
-
-# Create FastAPI application
 app = FastAPI(
-    title="Shop Location API",
+    title="MediCare Pharma API",
     version="1.0.0"
 )
 
 
+# =====================================
+# ADMIN FOLDER
+# =====================================
+
+app.mount(
+    "/admin",
+    StaticFiles(
+        directory="admin",
+        html=True
+    ),
+    name="admin"
+)
+
+
+# =====================================
+# DATABASE
+# =====================================
+
+Base.metadata.create_all(bind=engine)
+
+
+# =====================================
 # CORS
+# =====================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,72 +62,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# user
+
+# =====================================
+# HOME
+# =====================================
+
+@app.get("/")
+def home():
+    return {
+        "message": "MediCare Pharma API is running"
+    }
+
+
+# =====================================
+# USER PAGE
+# =====================================
+
 @app.get("/user")
 def user_page():
     return FileResponse("user/index.html")
-#pharma
+
+
+# =====================================
+# PHARMACY PAGE
+# =====================================
+
 @app.get("/pharmacy")
 def pharmacy_page():
     return FileResponse("pharmacy/index.html")
 
-# Home
-@app.get("/")
-def home():
-    return {
-        "message": "Shop Location API is running"
-    }
 
+# =====================================
+# CREATE PHARMACY
+# =====================================
 
-# Admin page
-@app.get("/admin")
-def admin_page():
-    return FileResponse("admin/index.html")
-
-#scanner
-@app.post("/api/medicines/scan")
-async def scan_medicine_api(
-    file: UploadFile = File(...)
-):
-
-    # Create temporary file
-    suffix = os.path.splitext(
-        file.filename
-    )[1] or ".jpg"
-
-    with tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=suffix
-    ) as temp:
-
-        temp.write(
-            await file.read()
-        )
-
-        temp_path = temp.name
-
-
-    try:
-
-        # Scan image
-        text = scan_medicine(
-            temp_path
-        )
-
-        return {
-            "success": True,
-            "text": text
-        }
-
-    finally:
-
-        if os.path.exists(temp_path):
-
-            os.remove(temp_path)
-
-
-# Create shop
-@app.post("/api/shops", response_model=ShopResponse)
+@app.post(
+    "/api/shops",
+    response_model=ShopResponse
+)
 def create_shop(
     shop: ShopCreate,
     db: Session = Depends(get_db)
@@ -122,8 +122,14 @@ def create_shop(
     return new_shop
 
 
-# Get all shops
-@app.get("/api/shops", response_model=list[ShopResponse])
+# =====================================
+# GET ALL PHARMACIES
+# =====================================
+
+@app.get(
+    "/api/shops",
+    response_model=list[ShopResponse]
+)
 def get_shops(
     db: Session = Depends(get_db)
 ):
@@ -131,8 +137,14 @@ def get_shops(
     return db.query(Shop).all()
 
 
-# Get one shop
-@app.get("/api/shops/{shop_id}", response_model=ShopResponse)
+# =====================================
+# GET ONE PHARMACY
+# =====================================
+
+@app.get(
+    "/api/shops/{shop_id}",
+    response_model=ShopResponse
+)
 def get_shop(
     shop_id: int,
     db: Session = Depends(get_db)
@@ -144,13 +156,16 @@ def get_shop(
 
     if not shop:
         return {
-            "error": "Shop not found"
+            "error": "Pharmacy not found"
         }
 
     return shop
 
 
-# Delete shop
+# =====================================
+# DELETE PHARMACY
+# =====================================
+
 @app.delete("/api/shops/{shop_id}")
 def delete_shop(
     shop_id: int,
@@ -163,12 +178,136 @@ def delete_shop(
 
     if not shop:
         return {
-            "error": "Shop not found"
+            "error": "Pharmacy not found"
         }
 
     db.delete(shop)
     db.commit()
 
     return {
-        "message": "Shop deleted successfully"
+        "message": "Pharmacy deleted successfully"
     }
+
+
+# =====================================
+# ADD MEDICINE
+# =====================================
+
+@app.post(
+    "/api/medicines",
+    response_model=MedicineResponse
+)
+def add_medicine(
+    medicine: MedicineCreate,
+    db: Session = Depends(get_db)
+):
+
+    shop = db.query(Shop).filter(
+        Shop.id == medicine.shop_id
+    ).first()
+
+    if not shop:
+        return {
+            "error": "Pharmacy not found"
+        }
+
+    new_medicine = Medicine(
+        shop_id=medicine.shop_id,
+        name=medicine.name,
+        generic_name=medicine.generic_name,
+        strength=medicine.strength,
+        price=medicine.price,
+        stock=medicine.stock
+    )
+
+    db.add(new_medicine)
+    db.commit()
+    db.refresh(new_medicine)
+
+    return new_medicine
+
+
+# =====================================
+# GET PHARMACY MEDICINES
+# =====================================
+
+@app.get(
+    "/api/medicines/shop/{shop_id}",
+    response_model=list[MedicineResponse]
+)
+def get_shop_medicines(
+    shop_id: int,
+    db: Session = Depends(get_db)
+):
+
+    return db.query(Medicine).filter(
+        Medicine.shop_id == shop_id
+    ).all()
+
+
+# =====================================
+# DELETE MEDICINE
+# =====================================
+
+@app.delete("/api/medicines/{medicine_id}")
+def delete_medicine(
+    medicine_id: int,
+    db: Session = Depends(get_db)
+):
+
+    medicine = db.query(Medicine).filter(
+        Medicine.id == medicine_id
+    ).first()
+
+    if not medicine:
+        return {
+            "error": "Medicine not found"
+        }
+
+    db.delete(medicine)
+    db.commit()
+
+    return {
+        "message": "Medicine deleted successfully"
+    }
+
+
+# =====================================
+# MEDICINE SCANNER
+# =====================================
+
+@app.post("/api/medicines/scan")
+async def scan_medicine_api(
+    file: UploadFile = File(...)
+):
+
+    suffix = os.path.splitext(
+        file.filename
+    )[1] or ".jpg"
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=suffix
+    ) as temp:
+
+        temp.write(
+            await file.read()
+        )
+
+        temp_path = temp.name
+
+    try:
+
+        text = scan_medicine(
+            temp_path
+        )
+
+        return {
+            "success": True,
+            "text": text
+        }
+
+    finally:
+
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
